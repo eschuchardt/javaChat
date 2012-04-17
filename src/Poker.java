@@ -5,7 +5,7 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.util.Random;
+import java.util.Scanner;
 
 
 public class Poker {
@@ -52,21 +52,24 @@ public class Poker {
     public static void pokerInterp(byte[] buffer, int playerNum) {
     	//begin deserialize and receive
     	DeckState newDeckState = new DeckState();
-    	int[] hand = new int[5];
-    	newDeckState.getHand(hand, playerNum);
     	try {
     		newDeckState = (DeckState)deserialize(buffer);
     	} catch (IOException e) {System.out.println("IOException");} catch (ClassNotFoundException e) {System.out.println("ClassNotFoundException");}
     	//end deserialize and receive
     	
+    	int[] hand = new int[5];
+    	//newDeckState.getHand(hand, playerNum);
     	
+    	//switch on the phase.
     	switch (newDeckState.getPhase()) {
     	case DEAL_PHASE:
+    		if(newDeckState.getPlayerUpdate(playerNum) == FALSE) {
+    			newDeckState.dealCards(hand, newDeckState.getUsedCards());
+    			newDeckState.setHand(hand, playerNum);
+    			newDeckState.setPlayerUpdate(playerNum, TRUE);
+    		}
     		if(newDeckState.isUpdated()) {
     			newDeckState.setPhase(BET1_PHASE);
-    		}
-    		else {
-    			dealCards(int[] hand, int[] usedCards)
     		}
     		break;
     	case BET1_PHASE: break;
@@ -86,7 +89,14 @@ public class Poker {
     private static final int BET2_PHASE = 3;
     private static final int FINAL_PHASE = 4;
     
-    Random ranGen = new Random(52);
+    //Set truth value
+    private static final int FALSE = 0;
+    private static final int TRUE = 1;
+    
+    //Offset for player cards
+    private static final int PLAYER_CARD_OFFSET = 5;
+    
+    
     
     static DeckState mDeckState;
     
@@ -155,65 +165,18 @@ public class Poker {
 //    	}
 //    }
     
-    /**
-     * 
-     * @param hand  a passed in hand of a player or used cards
-     * @param card  an int that represents a given card
-     * @return  true if card is legal.
-     */
-    public boolean checkLegalCard(int[] hand, int card) {
-    	boolean acceptCard = true;
-    	for(int i=0; i<hand.length; i++) {
-    		if(card == hand[i]) {
-    			acceptCard = false;
-    			break;
-    		}
-    	}
-    	return acceptCard;
-    }
-    /**
-     * Deals the cards based upon cards that have already been dealt to other players.
-     * @param hand  the hand of a player to be passed in.
-     * @param usedCards  used cards from all players.
-     * @return
-     */
-    public void dealCards(int[] hand, int[] usedCards) {
-    	int cardCount = 0;
-    	int ranNumber;
-    	boolean acceptCard = true;
-    	
-    	//init cards to 0
-    	for(int i=0; i<5; i++) {
-    		hand[i] = 52; //52 is not a number in the deck.
-    	}
-    	
-    	//While all the cards in the hand have not been changed...
-    	while (cardCount < 5) {
-    		ranNumber = ranGen.nextInt();
-    		if(usedCards != null) {
-    			//see if the number is in someone else's hand.
-    			acceptCard = checkLegalCard(usedCards, ranNumber);
-    		}
-    		
-			//check to see that the card is not already in the hand.
-			if(acceptCard) {
-				acceptCard = checkLegalCard(hand, ranNumber);
-				if(acceptCard) {
-					hand[cardCount] = ranNumber;
-    				cardCount++;
-				} //end if
-			} //end if
-			
-			//reset accept true to true
-    		acceptCard = true;
-    	} //end while
-    } //end dealCards()
+    
+    
+    
     
    
     public static void printDeckState(DeckState state) {
     	int[] playersCards = state.getPlayersCards();
     	int[] usedCards = state.getUsedCards();
-    	int[] playerUpdate = state.getPlayerUpdate();
+    	int[] playerUpdate = new int[state.getNumPlayers()];
+    	for(int i=0; i<state.getNumPlayers(); i++) {
+    		playerUpdate[i] = state.getPlayerUpdate(i);
+    	}
     	System.out.print("Players Cards: \n");
     		for(int j=0; j<20; ) {
     			for(int i=0; i<5; i++) {
@@ -245,31 +208,49 @@ public class Poker {
     	mDeckState.initUsedCards();
     	mDeckState.initPlayersCards();
     	mDeckState.initPlayerUpdate();
-    	mDeckState.setPlayerUpdate(1, 0);
-    	mDeckState.setPlayerUpdate(2, 0);
+    	mDeckState.setPlayerUpdate(0, FALSE);
+    	mDeckState.setPlayerUpdate(1, FALSE);
     	//TODO: init player }
         	
+    	Player p0 = new Player(0);
     	Player p1 = new Player(1);
-    	Player p2 = new Player(2);
     	
+    	Scanner scan = new Scanner(System.in);
+    	System.out.println("initial state:");
     	printDeckState(mDeckState);
-//    	while(mDeckState.getPhase() != FINAL_PHASE) {
-//    		//Player 1
-//    	
-//	    	/* everything from here and below is a part of the interp function */
-//	    	//begin serialize and send
-//	    	byte[] bytes = new byte[1024];
-//	    	try {
-//	    		bytes = serialize(mDeckState);
-//	    	} catch (IOException e) {System.out.println("IOException");}
-//	    	//end serialize and send
-//	    	
-//	    	//pick up where left off in code
-//	    	pokerInterp(bytes, 1/*playerNumber*/);
-//    	
-//    	
-//    		//Player 2
-//    	}
+    	while(mDeckState.getPhase() != FINAL_PHASE) {
+    		//Player 0
+    	
+	    	/* everything from here and below is a part of the interp function */
+	    	//begin serialize and send
+	    	byte[] bytes0 = new byte[1024];
+	    	try {
+	    		bytes0 = serialize(mDeckState);
+	    	} catch (IOException e) {System.out.println("IOException");}
+	    	//end serialize and send
+	    	
+	    	//pick up where left off in code
+	    	pokerInterp(bytes0, 0/*playerNumber*/);
+	    	System.out.println("Player0: ");
+	    	printDeckState(mDeckState);
+    	
+    	
+    		//Player 1
+	    	
+	    	/* everything from here and below is a part of the interp function */
+	    	//begin serialize and send
+	    	byte[] bytes1 = new byte[1024];
+	    	try {
+	    		bytes1 = serialize(mDeckState);
+	    	} catch (IOException e) {System.out.println("IOException");}
+	    	//end serialize and send
+	    	
+	    	//pick up where left off in code
+	    	pokerInterp(bytes1, 1/*playerNumber*/);
+	    	System.out.println("Player1: ");
+	    	printDeckState(mDeckState);
+	    	//int c = scan.nextInt();
+    	}
     	
     	
     	
