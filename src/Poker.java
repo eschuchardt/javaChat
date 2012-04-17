@@ -49,25 +49,34 @@ public class Poker {
      * 
      * @param buffer  The buffer that has the message passed from another user.
      */
-    public void pokerInterp(byte[] buffer) {
-    	//mDeckState.copy(mDeckState, (DeckState)buffer);
+    public static void pokerInterp(byte[] buffer, int playerNum) {
+    	//begin deserialize and receive
+    	DeckState newDeckState = new DeckState();
+    	int[] hand = new int[5];
+    	newDeckState.getHand(hand, playerNum);
     	try {
-    		deserialize(buffer);
-    	} catch (IOException e) {
-    		//TODO:
-    	} catch (ClassNotFoundException e) {
-    		//TODO:
-    	}
+    		newDeckState = (DeckState)deserialize(buffer);
+    	} catch (IOException e) {System.out.println("IOException");} catch (ClassNotFoundException e) {System.out.println("ClassNotFoundException");}
+    	//end deserialize and receive
     	
     	
-    	switch (mDeckState.getPhase()) {
-    	case DEAL_PHASE: break;
+    	switch (newDeckState.getPhase()) {
+    	case DEAL_PHASE:
+    		if(newDeckState.isUpdated()) {
+    			newDeckState.setPhase(BET1_PHASE);
+    		}
+    		else {
+    			dealCards(int[] hand, int[] usedCards)
+    		}
+    		break;
     	case BET1_PHASE: break;
     	case DRAW_PHASE: break;
     	case BET2_PHASE: break;
     	case FINAL_PHASE: break;
     	default: break;
     	}
+    	
+    	mDeckState = newDeckState;
     }
     
     //Phases for the round
@@ -200,33 +209,70 @@ public class Poker {
     	} //end while
     } //end dealCards()
     
+   
+    public static void printDeckState(DeckState state) {
+    	int[] playersCards = state.getPlayersCards();
+    	int[] usedCards = state.getUsedCards();
+    	int[] playerUpdate = state.getPlayerUpdate();
+    	System.out.print("Players Cards: \n");
+    		for(int j=0; j<20; ) {
+    			for(int i=0; i<5; i++) {
+    				System.out.print(playersCards[j] + " ");
+    				j++;
+    			}
+    			System.out.println();
+    		}
+    	System.out.println();
+    	System.out.print("Used Cards: \n");
+	    	for(int j=0; j<52; ) {
+				for(int i=0; i<10 && j<52; i++) {
+					System.out.print(usedCards[j]  +" ");
+					j++;
+				}
+				System.out.println();
+			}
+	    System.out.println();
+    	System.out.println("Phase: " + state.getPhase());
+    	System.out.println();
+    	System.out.println();
+    }
+    
     public static void main(String[] args) {
         //The init function {
     	mDeckState = new DeckState();
     	mDeckState.setNumPlayers(2);
     	mDeckState.setPhase(DEAL_PHASE);
+    	mDeckState.initUsedCards();
+    	mDeckState.initPlayersCards();
+    	mDeckState.initPlayerUpdate();
+    	mDeckState.setPlayerUpdate(1, 0);
+    	mDeckState.setPlayerUpdate(2, 0);
     	//TODO: init player }
         	
     	Player p1 = new Player(1);
     	Player p2 = new Player(2);
     	
-    	//begin serialize and send
-    	byte[] bytes = new byte[1024];
-    	try {
-    		bytes = serialize(mDeckState);
-    	} catch (IOException e) {System.out.println("IOException");}
-    	//end serialize and send
+    	printDeckState(mDeckState);
+//    	while(mDeckState.getPhase() != FINAL_PHASE) {
+//    		//Player 1
+//    	
+//	    	/* everything from here and below is a part of the interp function */
+//	    	//begin serialize and send
+//	    	byte[] bytes = new byte[1024];
+//	    	try {
+//	    		bytes = serialize(mDeckState);
+//	    	} catch (IOException e) {System.out.println("IOException");}
+//	    	//end serialize and send
+//	    	
+//	    	//pick up where left off in code
+//	    	pokerInterp(bytes, 1/*playerNumber*/);
+//    	
+//    	
+//    		//Player 2
+//    	}
     	
-    	//begin deserialize and receive
-    	DeckState newDeckState = new DeckState();
-    	try {
-    		newDeckState = (DeckState)deserialize(bytes);
-    	} catch (IOException e) {System.out.println("IOException");} catch (ClassNotFoundException e) {System.out.println("ClassNotFoundException");}
-    	//end deserialize and receive
     	
     	
-    	
-    	System.out.println(newDeckState.getNumPlayers() + "finished");
     	
     	
     }
