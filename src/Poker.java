@@ -1,7 +1,9 @@
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.Random;
 
@@ -19,17 +21,25 @@ public class Poker {
 //    }
     
     //TODO: Need to serialize each individual thing...http://arstechnica.com/civis/viewtopic.php?f=20&t=311940
-    public static byte[] serialize(Object obj) throws IOException {
-        ByteArrayOutputStream b = new ByteArrayOutputStream();
-        ObjectOutputStream o = new ObjectOutputStream(b);
-        o.writeObject(obj);
-        return b.toByteArray();
-    }
+	public static byte[] serialize(DeckState state) throws IOException {
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		ObjectOutput out = new ObjectOutputStream(bos);   
+		out.writeObject(state);
+		byte[] bytes = bos.toByteArray();
+		return bytes;
+		//...
+		//out.close();
+		//bos.close();
+	}
     
     public static Object deserialize(byte[] bytes) throws IOException, ClassNotFoundException {
-        ByteArrayInputStream b = new ByteArrayInputStream(bytes);
-        ObjectInputStream o = new ObjectInputStream(b);
-        return o.readObject();
+    	ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+    	ObjectInput in = new ObjectInputStream(bis);
+    	Object o = in.readObject(); 
+    	return o;
+    	//...
+    	//bis.close();
+    	//in.close();
     }
         
         
@@ -199,6 +209,25 @@ public class Poker {
         	
     	Player p1 = new Player(1);
     	Player p2 = new Player(2);
+    	
+    	//begin serialize and send
+    	byte[] bytes = new byte[1024];
+    	try {
+    		bytes = serialize(mDeckState);
+    	} catch (IOException e) {System.out.println("IOException");}
+    	//end serialize and send
+    	
+    	//begin deserialize and receive
+    	DeckState newDeckState = new DeckState();
+    	try {
+    		newDeckState = (DeckState)deserialize(bytes);
+    	} catch (IOException e) {System.out.println("IOException");} catch (ClassNotFoundException e) {System.out.println("ClassNotFoundException");}
+    	//end deserialize and receive
+    	
+    	
+    	
+    	System.out.println(newDeckState.getNumPlayers() + "finished");
+    	
     	
     }
 

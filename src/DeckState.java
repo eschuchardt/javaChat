@@ -1,7 +1,13 @@
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 
-public class DeckState {
-	int[] deck;
+
+public class DeckState implements Serializable {
+	//int[] deck;
 	int[] usedCards;
 	int[] playersCards; //the cards of each player in order.  Do mod to find player num
 	int numPlayers;
@@ -13,13 +19,15 @@ public class DeckState {
 	 * Constructor
 	 */
 	DeckState() {
-		deck = new int[52];
+		//deck = new int[52];
 		playersCards = new int[20];
 		usedCards = new int[52];
-		for(int i=0; i<52; i++) {
-			deck[i] = i;
-		}
+		//for(int i=0; i<52; i++) {
+		//	deck[i] = i;
+		//}
 	}
+	
+	
 	
 	public void copy(DeckState oldState, DeckState newState) { //TODO: may need to do a soft copy because of pointers.
 		oldState.setUsedCards(newState.getUsedCards());
