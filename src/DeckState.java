@@ -148,6 +148,28 @@ public class DeckState implements Serializable {
     	} //end while
     } //end dealCards()
 	
+	public int getRandomCard(int[] uCards, int[] hand) {
+		boolean validCard = false;
+		int ranNumber = 52;
+		while (!validCard) {
+    		ranNumber = ranGen.nextInt(52);
+    		if(uCards != null) {
+    			//see if the number is in someone else's hand.
+    			validCard = checkLegalCard(uCards, ranNumber);
+    		}
+    		else {
+    			//TODO: throw exception or something
+    		}
+    		
+    		if(validCard) {
+    			validCard = checkLegalCard(hand, ranNumber);
+			} //end if
+			
+			//reset accept true to true
+    	} //end while
+		return ranNumber;
+	}
+	
 	/**
 	 * Copies cards from the cards of all players and assigns only the individual
 	 * hand of the player specified into hand.
@@ -161,7 +183,7 @@ public class DeckState implements Serializable {
 		}
 		int offset = (playerNum*5);
 		int j = 0;
-		for(int i=offset; i<offset; i++) {
+		for(int i=offset; i<offset+5; i++) {
 			hand[j]=playersCards[i];
 			j++;
 		}
@@ -257,8 +279,15 @@ public class DeckState implements Serializable {
 		return phase;
 	}
 	
+	/**
+	 * updates playersCards 
+	 * @param cards  To be copied
+	 * @param playerNum 
+	 */
 	public void setPlayersCards(int[] cards, int playerNum) {
-		
+		for(int i=0; i<cards.length; i++) {
+			playersCards[playerNum*5 + i] = cards[i];
+		}
 	}
 	public int[] getPlayersCards() {
 		return playersCards;

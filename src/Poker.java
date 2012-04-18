@@ -61,13 +61,14 @@ public class Poker {
     	//TODO: remove this scanner
     	Scanner scan = new Scanner(System.in);
     	
+    	int[] hand;
     	boolean whileFlag = true;
     	int bid = 0;
     	//boolean whileFlag = true;
     	//switch on the phase.
     	switch (newDeckState.getPhase()) {
     	case DEAL_PHASE:
-    		int[] hand = new int[5];
+    		hand = new int[5];
     		//newDeckState.getHand(hand, playerNum);
     		if(newDeckState.getPlayerUpdate(playerNum) == FALSE) {
     			newDeckState.dealCards(hand, newDeckState.getUsedCards());
@@ -167,7 +168,40 @@ public class Poker {
 				break;
 			}
     		break;
-    	case DRAW_PHASE: break;
+    	case DRAW_PHASE: 
+    		//ask user which cards to replace
+    		System.out.println("How many cards are you replacing?: ");
+    		int replacing = scan.nextInt(); //find out how many cards they are replacing
+    		if(replacing>0) {
+	    		hand = new int[5];
+	    		newDeckState.getHand(hand, playerNum);
+//	    		int[] discard = new int[5];
+//	    		for(int i=0; i<discard.length; i++) {
+//	    			discard[i] = 52;
+//	    		}
+	    		int scanned;
+	    		//TODO: check that int is in range of <5
+	    		for(int i=0; i<replacing; i++) {
+	    			//TODO: check within range
+	    			System.out.println("Enter pos of card to replace: ");
+	    			scanned = scan.nextInt(); //should scan position of card they are replacing
+	    			
+	    			hand[scanned] = newDeckState.getRandomCard(newDeckState.getUsedCards(), hand); //insert random number into local hand, but not into usedCards or playersCards
+	    			newDeckState.setUsedCard(hand[scanned]); //insert new number into usedCards
+	    		}
+	    		newDeckState.setPlayersCards(hand, playerNum); //replace cards in deckstate
+    		
+    		}
+    		//update player
+    		newDeckState.setPlayerUpdate(playerNum, TRUE);
+    		
+    		//if everyone is updated, switch phases
+    		if(newDeckState.isUpdated()) {
+    			newDeckState.setPhase(BET2_PHASE);
+    			newDeckState.initPlayerUpdate();
+    		}
+    		
+    		break;
     	case BET2_PHASE: break;
     	case FINAL_PHASE: break;
     	default: break;
@@ -321,7 +355,6 @@ public class Poker {
     	System.out.println();
     	System.out.println("Current Bid: " + state.getCurrentBid());
     	System.out.println();
-    	System.out.println();
     }
     
     public static void main(String[] args) {
@@ -357,6 +390,9 @@ public class Poker {
 	    	pokerInterp(bytes0, 0/*playerNumber*/);
 	    	System.out.println("Player0: ");
 	    	printDeckState(mDeckState);
+	    	//TODO: take next print out
+	    	System.out.println("after player 0");
+	    	System.out.println();
     	
     	
     		//Player 1
@@ -373,6 +409,9 @@ public class Poker {
 	    	pokerInterp(bytes1, 1/*playerNumber*/);
 	    	System.out.println("Player1: ");
 	    	printDeckState(mDeckState);
+	    	//TODO: take next print out
+	    	System.out.println("after player 1");
+	    	System.out.println();
 	    	//int c = scan.nextInt();
     	}
     	
