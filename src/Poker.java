@@ -85,15 +85,6 @@ public class Poker {
     		
     		while(whileFlag) {
     			
-    			//check to see if there are still more than one player who has not folded.
-    			//if there is not, set state to FINAL_PHASE
-    			if(!newDeckState.checkPlayerState()) {
-    				whileFlag = false;
-    				newDeckState.setPhase(FINAL_PHASE);
-    				break;
-    			}
-    				
-    			
 	    		if(newDeckState.getPlayerUpdate(playerNum) == FALSE) {
 	    			System.out.println("Options: \n" +
 	    					"0. Check\n" +
@@ -143,7 +134,6 @@ public class Poker {
 	    					newDeckState.setPlayersBids(bid, playerNum);
 	    					newDeckState.setCurrentBid(bid);
 	    					newDeckState.setPlayerUpdateAndClear(playerNum, TRUE);
-	    					//TODO: 
 	    					whileFlag = false; //break the loop.
 	    				}
 	    				else {
@@ -161,12 +151,21 @@ public class Poker {
 	    				System.out.println("\n Did not recognize input.\n");
 	    				break;
 	    			}
-	    			//check to see if all players involved have finished this phase
-	    			if(newDeckState.isUpdated()) {
-	        			newDeckState.setPhase(DRAW_PHASE);
-	        		}
 	    		}
+    		} //end while loop
+    		//check to see if all players involved have finished this phase
+			if(newDeckState.isUpdated()) {
+    			newDeckState.setPhase(DRAW_PHASE);
+    			newDeckState.initPlayerUpdate();
     		}
+			
+    		//check to see if there are still more than one player who has not folded.
+			//if there is not, set state to FINAL_PHASE
+			if(!newDeckState.checkPlayerState()) {
+				whileFlag = false;
+				newDeckState.setPhase(FINAL_PHASE);
+				break;
+			}
     		break;
     	case DRAW_PHASE: break;
     	case BET2_PHASE: break;
