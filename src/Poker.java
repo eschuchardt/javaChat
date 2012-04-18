@@ -57,22 +57,117 @@ public class Poker {
     	} catch (IOException e) {System.out.println("IOException");} catch (ClassNotFoundException e) {System.out.println("ClassNotFoundException");}
     	//end deserialize and receive
     	
-    	int[] hand = new int[5];
-    	//newDeckState.getHand(hand, playerNum);
     	
+    	//TODO: remove this scanner
+    	Scanner scan = new Scanner(System.in);
+    	
+    	boolean whileFlag = true;
+    	int bid = 0;
+    	//boolean whileFlag = true;
     	//switch on the phase.
     	switch (newDeckState.getPhase()) {
     	case DEAL_PHASE:
+    		int[] hand = new int[5];
+    		//newDeckState.getHand(hand, playerNum);
     		if(newDeckState.getPlayerUpdate(playerNum) == FALSE) {
     			newDeckState.dealCards(hand, newDeckState.getUsedCards());
     			newDeckState.setHand(hand, playerNum);
+    			//add dealt cards to usedCards var
+    			newDeckState.setUsedCards(hand);
     			newDeckState.setPlayerUpdate(playerNum, TRUE);
     		}
     		if(newDeckState.isUpdated()) {
     			newDeckState.setPhase(BET1_PHASE);
+    			newDeckState.initPlayerUpdate();
     		}
     		break;
-    	case BET1_PHASE: break;
+    	case BET1_PHASE: //Place bet or fold
+    		
+    		while(whileFlag) {
+    			
+    			//check to see if there are still more than one player who has not folded.
+    			//if there is not, set state to FINAL_PHASE
+    			if(!newDeckState.checkPlayerState()) {
+    				whileFlag = false;
+    				newDeckState.setPhase(FINAL_PHASE);
+    				break;
+    			}
+    				
+    			
+	    		if(newDeckState.getPlayerUpdate(playerNum) == FALSE) {
+	    			System.out.println("Options: \n" +
+	    					"0. Check\n" +
+	    					"1. Call\n" +
+	    					"2. Raise\n" +
+	    					"3. Fold");
+	    			int bidPhaseOption = scan.nextInt();
+	    			switch(bidPhaseOption) {
+	    			case BID_PHASE_CHECK:
+	    				//check if current bid is higher than bid
+	    				//if it is, replace currentBid with bid
+	    				//if bid is good, set flag to false
+	    				//else repeat and say why it didn't work
+	    				bid = newDeckState.getPlayersBids(playerNum);
+	    				if(newDeckState.checkGoodCheck(bid)) {
+	    					newDeckState.setCurrentBid(bid);
+	    					newDeckState.setPlayerUpdate(playerNum, TRUE);
+	    					whileFlag = false; //break the loop.
+	    				}
+	    				else {
+	    					System.out.println("\n Cannot Check.\n");
+	    				}
+	    				break;
+	    			case BID_PHASE_CALL:
+	    				//check if current bid is higher than bid
+	    				//if bid is good, set flag to false
+	    				//else repeat and say why it didn't work
+	    				bid = newDeckState.getCurrentBid();
+	    				if(newDeckState.getPlayersBids(playerNum) != bid) {
+	    					//don't need to set current bid because he just called to the current highest bid.
+	    					newDeckState.setPlayersBids(bid, playerNum);
+	    					newDeckState.setPlayerUpdate(playerNum, TRUE);
+	    					whileFlag = false; //break the loop.
+	    				}
+	    				else {
+	    					System.out.println("\n Cannot Call.\n");
+	    				}
+	    				break;
+	    			case BID_PHASE_RAISE:
+	    				//check if current bid is higher than bid
+	    				//if bid is good, set flag to false
+	    				//else repeat and say why it didn't work
+	    				System.out.println("You have " + newDeckState.getPlayersMoney(playerNum) + " to bid.\n Enter amount: ");
+	    				//TODO: check to see if they enter a valid amount.
+	    				bid = scan.nextInt();
+	    				if(newDeckState.checkGoodRaise(bid)) {
+	    					newDeckState.setPlayersBids(bid, playerNum);
+	    					newDeckState.setCurrentBid(bid);
+	    					newDeckState.setPlayerUpdateAndClear(playerNum, TRUE);
+	    					//TODO: 
+	    					whileFlag = false; //break the loop.
+	    				}
+	    				else {
+	    					System.out.println("\n Did not outbid max.\n");
+	    				}
+	    				break;
+	    			case BID_PHASE_FOLD:
+	    				//if bid is good, set flag to false
+	    				newDeckState.setPlayerState(FOLD, playerNum);
+	    				newDeckState.setPlayerUpdate(playerNum, TRUE);
+	    				whileFlag = false;
+	    				break;
+	    			default:
+	    				//TODO: put in while loop for user input or something
+	    				System.out.println("\n Did not recognize input.\n");
+	    				break;
+	    			}
+	    			//check to see if all players involved have finished this phase
+	    			if(newDeckState.isUpdated()) {
+	        			newDeckState.setPhase(DRAW_PHASE);
+	        		}
+	    		}
+    		}
+    		break;
     	case DRAW_PHASE: break;
     	case BET2_PHASE: break;
     	case FINAL_PHASE: break;
@@ -96,6 +191,14 @@ public class Poker {
     //Offset for player cards
     private static final int PLAYER_CARD_OFFSET = 5;
     
+    //In or out of the game
+    private static final int FOLD = 0;
+	private static final int STAY = 1;
+	
+	private static final int BID_PHASE_CHECK = 0;
+	private static final int BID_PHASE_CALL = 1;
+	private static final int BID_PHASE_RAISE = 2;
+	private static final int BID_PHASE_FOLD = 3;
     
     
     static DeckState mDeckState;
@@ -177,6 +280,7 @@ public class Poker {
     	for(int i=0; i<state.getNumPlayers(); i++) {
     		playerUpdate[i] = state.getPlayerUpdate(i);
     	}
+    	System.out.println("Phase: " + state.getPhase());
     	System.out.print("Players Cards: \n");
     		for(int j=0; j<20; ) {
     			for(int i=0; i<5; i++) {
@@ -185,17 +289,38 @@ public class Poker {
     			}
     			System.out.println();
     		}
-    	System.out.println();
     	System.out.print("Used Cards: \n");
 	    	for(int j=0; j<52; ) {
-				for(int i=0; i<10 && j<52; i++) {
+				for(int i=0; i<20 && j<52; i++) {
 					System.out.print(usedCards[j]  +" ");
 					j++;
 				}
 				System.out.println();
 			}
-	    System.out.println();
-    	System.out.println("Phase: " + state.getPhase());
+    	
+    	System.out.print("Players States: ");
+    	for(int i=0; i<4; i++) {
+    		System.out.print(state.getPlayerState(i) + " ");
+    	}
+    	System.out.println();
+    	
+    	System.out.print("Players Update: ");
+    	for(int i=0; i<4; i++) {
+    		System.out.print(state.getPlayerUpdate(i) + " ");
+    	}
+    	System.out.println();
+    	
+    	System.out.print("Players Bids: ");
+    	for(int i=0; i<4; i++) {
+    		System.out.print(state.getPlayersBids(i) + " ");
+    	}
+    	System.out.println();
+    	System.out.print("Players Money: ");
+    	for(int i=0; i<4; i++) {
+    		System.out.print(state.getPlayersMoney(i) + " ");
+    	}
+    	System.out.println();
+    	System.out.println("Current Bid: " + state.getCurrentBid());
     	System.out.println();
     	System.out.println();
     }

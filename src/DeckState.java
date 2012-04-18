@@ -8,13 +8,24 @@ import java.util.Random;
 
 
 public class DeckState implements Serializable {
+	private static final int FOLD = 0;
+	private static final int STAY = 1;
+	
+	private static final int FALSE = 0;
+	private static final int TRUE = 1;
+	
 	//int[] deck;
+	int[] playerState;
+	int[] playersBids;
 	int[] usedCards;
 	int[] playersCards; //the cards of each player in order.  Do mod to find player num
+	int[] playersMoney;
 	int[] playerUpdate;
 	int numPlayers;
 	int phase;
-	Random ranGen = new Random(52);
+	int pot;
+	int currentBid;
+	Random ranGen = new Random();
 	
 	
 	
@@ -23,9 +34,19 @@ public class DeckState implements Serializable {
 	 */
 	DeckState() {
 		//deck = new int[52];
+		pot = 0;
+		currentBid = 0;
+		playerState = new int[4];
+		initPlayerState();
+		playersBids = new int[4];
+		initPlayersBids();
 		playersCards = new int[20];
 		usedCards = new int[52];
 		playerUpdate = new int[4];
+		playersMoney = new int[4];
+		for(int i=0; i<playersMoney.length; i++) {
+			playersMoney[i]= 200;
+		}
 		//for(int i=0; i<52; i++) {
 		//	deck[i] = i;
 		//}
@@ -34,6 +55,18 @@ public class DeckState implements Serializable {
 	public void initPlayersCards() {
 		for(int i=0; i<playersCards.length; i++) {
 			playersCards[i] = 52;
+		}
+	}
+	
+	public void initPlayerState() {
+		for(int i=0; i<playerState.length; i++) {
+			playerState[i]= STAY;
+		}
+	}
+	
+	public void initPlayersBids() {
+		for(int i=0; i<playersBids.length; i++) {
+			playersBids[i]= 0;
 		}
 	}
 	
@@ -152,8 +185,59 @@ public class DeckState implements Serializable {
 		oldState.setPlayersCards(newState.getPlayersCards(), numPlayers);
 	}
 	
+	public boolean checkGoodCheck(int bid) {
+		return bid == currentBid;
+	}
+	public boolean checkGoodRaise(int bid) {
+		return bid > currentBid;
+	}
+	
+	/**
+	 * checks to see if more than one player is still going in the game.  
+	 * @return  If there is only one player that has not folded, return false. 
+	 * 			If there are more than one player in game, return true.
+	 */
+	public boolean checkPlayerState() {
+		int n = 0;
+		for(int i=0; i<numPlayers; i++) {
+			if(playerState[i] == STAY)
+				n++;
+		}
+		if(n>1)
+			return true;
+		return false;
+	}
+	
+	
+	/**
+	 * like setUsedCards but only inserts one card.
+	 * This won't be as efficient as doing setUsedCards() for multiple cards, but could be tons easier.
+	 * @param cards
+	 */
+	public void setUsedCard(int card) {
+		int i = 0;
+		for(; i<usedCards.length; i++) {
+			if(usedCards[i] == 52) {
+				break;
+			}
+		}
+		usedCards[i] = card;
+	}
+	/**
+	 * sets used cards by going to the first instance of 52 and inserting cards starting from there on.
+	 * @param cards
+	 */
 	public void setUsedCards(int[] cards) {
-		usedCards = cards;
+		for(int i=0; i<usedCards.length; i++) {
+			if(usedCards[i] != 52) {
+				continue;
+			}
+			for(int j=0; j<cards.length; j++) {
+				usedCards[i] = cards[j];
+				i++;
+			}
+			break;
+		}
 	}
 	public int[] getUsedCards() {
 		return usedCards;
@@ -186,4 +270,51 @@ public class DeckState implements Serializable {
 	public int getPlayerUpdate(int playerNum) {
 		return playerUpdate[playerNum]; 
 	}
+	public void setPlayerUpdateAndClear(int player, int value) { //sets update to value and sets all others that are still in to false
+		for(int i=0; i<numPlayers; i++) {
+			if(playerState[i] != FOLD) {
+				playerUpdate[i] = FALSE;
+			}
+		}
+		playerUpdate[player] = value;
+	}
+	
+	public int getCurrentBid() {
+		return currentBid;
+	}
+	public void setCurrentBid(int bid) {
+		currentBid = bid;
+	}
+	
+	public int getPot() {
+		return pot;
+	}
+	public void setPot(int bid) {
+		pot = bid;
+	}
+	
+	public void setPlayersBids(int bid, int playerNum) {
+		playersBids[playerNum] = bid;
+	}
+	public int getPlayersBids(int playerNum) {
+		return playersBids[playerNum];
+	}
+	
+	public void setPlayersMoney(int bid, int playerNum) {
+		playersMoney[playerNum] = bid;
+	}
+	public int getPlayersMoney(int playerNum) {
+		return playersMoney[playerNum];
+	}
+	
+	public void setPlayerState(int value, int playerNum) {
+		playerState[playerNum] = value;
+	}
+	public int getPlayerState(int playerNum) {
+		return playerState[playerNum];
+	}
+	
+	
+	
+	
 }
