@@ -136,25 +136,25 @@ public class Poker {
     		//newDeckState.getHand(hand, playerNum);
     		if(newDeckState.getPlayerUpdate(playerNum) == FALSE) {
     			//TODO: undo this following comment
-    			//newDeckState.dealCards(hand, newDeckState.getUsedCards());
+    			newDeckState.dealCards(hand, newDeckState.getUsedCards());
     			
-    			/*
-    			 * TODO: THIS IS THE TESTING PART
-    			 */
-    			switch(playerNum) {
-    			case 0:
-    				testStraight(hand);
-    				break;
-    			case 1:
-    				testFlush(hand);
-    				break;
-    			case 2:
-    				testFullHouse(hand);
-    				break;
-    			case 3:
-    				testStraightFlush(hand);
-    				break;
-    			}
+//    			/*
+//    			 * TODO: THIS IS THE TESTING PART
+//    			 */
+//    			switch(playerNum) {
+//    			case 0:
+//    				testStraight(hand);
+//    				break;
+//    			case 1:
+//    				testFlush(hand);
+//    				break;
+//    			case 2:
+//    				testFullHouse(hand);
+//    				break;
+//    			case 3:
+//    				testStraightFlush(hand);
+//    				break;
+//    			}
     			newDeckState.setHand(hand, playerNum);
     			//add dealt cards to usedCards var
     			newDeckState.setHand(hand, playerNum);
@@ -186,6 +186,9 @@ public class Poker {
 			}
     		break;
     	case DRAW_PHASE: 
+    		if(newDeckState.getPlayerState(playerNum) == FOLD) {
+    			break;
+    		}
     		//ask user which cards to replace
     		System.out.println("How many cards are you replacing?: ");
     		int replacing = scan.nextInt(); //find out how many cards they are replacing
@@ -279,7 +282,9 @@ public class Poker {
     	int bid = 0;
     	
     	while(whileFlag) {
-			
+			if(newDeckState.getPlayerState(playerNum) == FOLD) {
+				break;
+			}
     		if(newDeckState.getPlayerUpdate(playerNum) == FALSE) {
     			System.out.println("Options: \n" +
     					"0. Check\n" +
@@ -310,6 +315,7 @@ public class Poker {
     				bid = newDeckState.getCurrentBid();
     				if(newDeckState.getPlayersBids(playerNum) != bid) {
     					//don't need to set current bid because he just called to the current highest bid.
+    					newDeckState.bidMoney(bid, playerNum); //subtract this from his total money 
     					newDeckState.setPlayersBids(bid, playerNum);
     					newDeckState.setPlayerUpdate(playerNum, TRUE);
     					whileFlag = false; //break the loop.
@@ -326,6 +332,7 @@ public class Poker {
     				//TODO: check to see if they enter a valid amount.
     				bid = scan.nextInt();
     				if(newDeckState.checkGoodRaise(bid)) {
+    					newDeckState.bidMoney(bid, playerNum); //subtract this from his total money 
     					newDeckState.setPlayersBids(bid, playerNum);
     					newDeckState.setCurrentBid(bid);
     					newDeckState.setPlayerUpdateAndClear(playerNum, TRUE);

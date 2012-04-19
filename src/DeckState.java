@@ -49,6 +49,7 @@ public class DeckState implements Serializable {
 	//int[] deck;
 	int[] playerState;
 	int[] playersBids;
+//	int[] playersPreviousBids;
 	int[] usedCards;
 	int[] playersCards; //the cards of each player in order.  Do mod to find player num
 	int[] playersMoney;
@@ -77,6 +78,8 @@ public class DeckState implements Serializable {
 		initPlayerState();
 		playersBids = new int[4];
 		initPlayersBids();
+//		playersPreviousBids = new int[4];
+//		initiPlayersPreviousBids();
 		playersCards = new int[20];
 		usedCards = new int[52];
 		playerUpdate = new int[4];
@@ -113,6 +116,12 @@ public class DeckState implements Serializable {
 		}
 	}
 	
+//	public void initiPlayersPreviousBids() {
+//		for(int i=0; i<playersPreviousBids.length; i++) {
+//			playersPreviousBids[i]= 0;
+//		}
+//	}
+	
 	public void initUsedCards() {
 		for(int i=0; i<usedCards.length; i++) {
 			usedCards[i] = 52;
@@ -121,7 +130,9 @@ public class DeckState implements Serializable {
 	
 	public void initPlayerUpdate() {
 		for(int i=0; i<playerUpdate.length; i++) {
-			playerUpdate[i] = 0;
+			if(getPlayerState(i) == STAY) {
+				playerUpdate[i] = 0;
+			}
 		}
 	}
 	
@@ -394,11 +405,20 @@ public class DeckState implements Serializable {
 	public int getPlayersMoney(int playerNum) {
 		return playersMoney[playerNum];
 	}
+	/** 
+	 * takes bid. subtracts only the raised portion of the bid.
+	 * @param bid
+	 * @param playerNum
+	 */
+	public void bidMoney(int bid, int playerNum) {
+		int netBid = bid - getPlayersBids(playerNum); //how much to subtract it by
+		setPlayersMoney(getPlayersMoney(playerNum) - netBid, playerNum);
+	}
 	
 	public void setPlayerState(int value, int playerNum) {
 		playerState[playerNum] = value;
 	}
-	public int getPlayerState(int playerNum) {
+	public int getPlayerState(int playerNum) { //1 is good, 0 is fold
 		return playerState[playerNum];
 	}
 	
