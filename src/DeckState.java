@@ -4,7 +4,9 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Random;
-
+/*
+ * diamonds, clubs, hearts, spades
+ */
 
 
 public class DeckState implements Serializable {
@@ -14,6 +16,36 @@ public class DeckState implements Serializable {
 	private static final int FALSE = 0;
 	private static final int TRUE = 1;
 	
+	//Hand values
+	private static final int CARD_HIGH = 0;
+	private static final int PAIR = 1;
+	private static final int TWO_PAIR = 2;
+	private static final int THREE_OF_A_KIND = 3;
+	private static final int FOUR_OF_A_KIND = 4;
+	private static final int STRAIGHT = 5;
+	private static final int FLUSH = 6;
+	private static final int FULL_HOUSE = 7;
+	private static final int STRAIGHT_FLUSH = 8;
+	
+	private static final int CARDS_PER_SUIT = 13;
+	
+	//lower and upper bounds to deck for each suit
+	private static final int DIAMONDS_LOW = 0;
+	private static final int DIAMONDS_HIGH = 12;
+	private static final int CLUBS_LOW = 13;
+	private static final int CLUBS_HIGH = 25;
+	private static final int HEARTS_LOW = 26;
+	private static final int HEARTS_HIGH = 38;
+	private static final int SPADES_LOW = 39;
+	private static final int SPADES_HIGH = 51;
+	
+	//suits
+	private static final int DIAMONDS = 0;
+	private static final int CLUBS = 1;
+	private static final int HEARTS = 2;
+	private static final int SPADES = 3;
+	
+	
 	//int[] deck;
 	int[] playerState;
 	int[] playersBids;
@@ -21,10 +53,13 @@ public class DeckState implements Serializable {
 	int[] playersCards; //the cards of each player in order.  Do mod to find player num
 	int[] playersMoney;
 	int[] playerUpdate;
+	int[] playersFinalHand;
 	int numPlayers;
 	int phase;
 	int pot;
 	int currentBid;
+	int winningHand;
+	int winningPlayer;
 	Random ranGen = new Random();
 	
 	
@@ -36,6 +71,8 @@ public class DeckState implements Serializable {
 		//deck = new int[52];
 		pot = 0;
 		currentBid = 0;
+		playersFinalHand = new int[4];
+		initPlayersFinalHand();
 		playerState = new int[4];
 		initPlayerState();
 		playersBids = new int[4];
@@ -50,6 +87,12 @@ public class DeckState implements Serializable {
 		//for(int i=0; i<52; i++) {
 		//	deck[i] = i;
 		//}
+	}
+	
+	public void initPlayersFinalHand() {
+		for(int i=0; i<playersFinalHand.length; i++) {
+			playersFinalHand[i] = 0;
+		}
 	}
 	
 	public void initPlayersCards() {
@@ -168,6 +211,22 @@ public class DeckState implements Serializable {
 			//reset accept true to true
     	} //end while
 		return ranNumber;
+	}
+	
+	public int getRemainingPlayer() { //returns the winning player number.
+		for(int i=0; i<numPlayers; i++) {
+			if(playerState[i] == STAY) {
+				winningPlayer = i;
+				return i;
+			}
+		}
+		return 52;
+	}
+	
+	public void distributeWinnings(int playerNum) {
+		for(int i=0; i<numPlayers; i++) {
+			playersMoney[playerNum] = playersMoney[playerNum] + playersBids[i];
+		}
 	}
 	
 	/**
@@ -343,7 +402,256 @@ public class DeckState implements Serializable {
 		return playerState[playerNum];
 	}
 	
+	private void setPlayersFinalHand(int handValue, int playerNum) {
+		playersFinalHand[playerNum] = handValue;
+	}
+	public int getPlayersFinalHand(int playerNum) {
+		return playersFinalHand[playerNum];
+	}
 	
+	/*
+	 * Begin hand recognition
+	 */
 	
+	public void calcWinningHand() {
+		int value;
+		for(int i=0; i<numPlayers; i++) {
+			value = isNOfAKind(i);
+			setPlayersFinalHand(value, i);
+			setWinningHand(value);
+			if(isFlush(i) == TRUE) {
+				setPlayersFinalHand(FLUSH, i);
+				setWinningHand(FLUSH);
+			}
+			if(isStraight(i) == TRUE) {
+				setPlayersFinalHand(STRAIGHT, i);
+				setWinningHand(STRAIGHT);
+			}
+			if(isStraightFlush(i) == TRUE) {
+				setPlayersFinalHand(STRAIGHT_FLUSH, i);
+				setWinningHand(STRAIGHT_FLUSH);
+			}
+			 						
+		}
+		calcWinningPlayer();
+	}
+	public void calcWinningPlayer() {
+		int[] players = new int[numPlayers];
+		int[] playersSorted = new int[numPlayers];
+		for(int i=0; i<players.length; i++) {
+			players[i] = getPlayersFinalHand(i);
+		}
+		for(int i=0; i<playersSorted.length; i++) {
+			playersSorted[i] = getPlayersFinalHand(i);
+		}
+		
+		bubbleSort(playersSorted);
+		//see if more than one person has a winning hand
+		int winningHand = playersSorted[3];
+		int count = 0; //how many others have this hand
+		for(int i=numPlayers-2; i>=0; i--) { //start with the second highest hand
+			if(playersSorted[i] == winningHand) {
+				count++;
+			}
+		}
+		
+		//if there is only one winner, set him as the winner
+		if(count == 0) {
+			for(int i=0; i<numPlayers; i++) {
+				if(players[i] == winningHand) { //this is the player who has the winning hand.
+					setWinningPlayer(i);
+					setWinningHand(winningHand);
+				}
+			}
+		}
+		else { //TODO: THERE IS MORE THAN ONE WINNER
+			
+		}
+		
+	}
+	public int getWinningHand() {
+		return winningHand;
+	}
+	public void setWinningHand(int hand) {
+		winningHand = hand;
+	}
+	/**
+	 * 
+	 * @return  Who the winning player was
+	 */
+	public int getWinningPlayer() {
+		return winningPlayer;
+	}
+	private void setWinningPlayer(int playerNum) {
+		winningPlayer = playerNum;
+	}
+	
+	/**
+	 * 
+	 * @param playerNum
+	 * @return  if it is not a pair, three, or four of a kind or two pair or full house, 
+	 */
+	public int isNOfAKind(int playerNum) {
+		int returnValue = 52;
+		int[] hand = new int[5];
+		getHand(hand, playerNum);
+		
+		int counter1 = 1; //counters correspond to matches
+		int counter2 = 1;
+		int currentCard = 52;
+		int match1 = 52; //match1 and 2 are for n of a kind.  the value is stored in one of these.
+		int match2 = 52; //match2 will only be needed for 2 pair and full house.
+		boolean firstPass = true;
+		
+		//set all cards to actual numerical value
+		for(int i=0; i<hand.length; i++) {
+			hand[i] = hand[i] % CARDS_PER_SUIT;
+		}
+		
+		//TODO: nasty if clauses
+		for(int i=0; i<hand.length; i++) {
+			currentCard = hand[i];
+			for(int j=i+1; j<hand.length; j++) { //navigate the remaining cards in "hand"
+				
+				if((currentCard == match1 || currentCard == match2) && !firstPass) //if this is the case, it has already been counted.
+					continue;
+				
+				if(currentCard == hand[j]) {
+					if(match1 == 52) { //this is the first pair it found
+						match1 = currentCard;
+						counter1++;
+						
+					}
+					else { 
+						if(currentCard == match1)  { //found another instance of match1
+							counter1++;
+						}
+						else {
+							if(match2 == 52) { //it needs to be assigned to match2 because it is a second pair.
+								match2 = currentCard;
+								counter2++;
+							}
+							else { //it SHOULD be the same cards as match2
+								if(currentCard == match2)  { //found another instance of match1
+									counter2++;
+								}
+								else {
+									//TODO: THROW ERROR
+									System.out.println("HORRIBLE ERROR IN THE ISNOFKIND() METHOD");
+								}
+							}
+						}
+					}
+				}
+			}
+			firstPass = false; //this is set after the first pass of the inner for loop
+		}
+		//find out what they have.
+		if(match2 == 52) { //there is just one kind
+			if(match1 == 52) { //no kinds
+				return CARD_HIGH;
+			}
+			else { //at least a pair
+				switch(counter1) {
+				case 2:
+					setPlayersFinalHand(PAIR, playerNum);
+					return PAIR;
+				case 3:
+					setPlayersFinalHand(THREE_OF_A_KIND, playerNum);
+					return THREE_OF_A_KIND;
+				case 4:
+					setPlayersFinalHand(FOUR_OF_A_KIND, playerNum);
+					return FOUR_OF_A_KIND;
+				}
+			}
+		}
+		else { //either 2 pair or full house
+			if(counter1 == 3 || counter2 == 3){
+				setPlayersFinalHand(FULL_HOUSE, playerNum);
+				return FULL_HOUSE;
+			}
+			else {
+				setPlayersFinalHand(TWO_PAIR, playerNum);
+				return TWO_PAIR;
+			}
+		}
+		return returnValue;
+	}
+	
+	public int isStraight(int playerNum) {
+		int returnValue = FALSE;
+		int[] hand = new int[5];
+		getHand(hand, playerNum);
+		
+		//set all cards to actual numerical value
+		for(int i=0; i<hand.length; i++) {
+			hand[i] = hand[i] % CARDS_PER_SUIT;
+		}
+		bubbleSort(hand);
+		
+		for(int i=0; i<hand.length-1; i++) { //check to see if they are in order
+			if(hand[i]+1 != hand[i+1]) { 
+				returnValue = FALSE;
+				break;
+			}
+			returnValue = TRUE;
+		}
+		if(returnValue == TRUE) {
+			setPlayersFinalHand(STRAIGHT, playerNum);
+		}
+		return returnValue;
+	}
+	
+	public int isFlush(int playerNum) {
+		int[] hand = new int[5];
+		getHand(hand, playerNum);
+		
+		int suit = hand[0]/13; //init suit to the first card
+		for(int i=0; i<hand.length; i++) { //make all the same number if they are the same suit.
+			hand[i] = hand[i]/13;
+			if(hand[i] != suit) {
+				return FALSE;
+			}
+		}
+		setPlayersFinalHand(FLUSH, playerNum);
+		return TRUE;
+	}
+	
+//	public int isFullHouse(int playerNum) {
+//		int returnValue = 52;
+//		int[] hand = new int[5];
+//		getHand(hand, playerNum);
+//		
+//		return returnValue;
+//	}
+	
+	public int isStraightFlush(int playerNum) {
+		int[] hand = new int[5];
+		getHand(hand, playerNum);
+		if(isFlush(playerNum) == TRUE && isStraight(playerNum) == TRUE) {
+			setPlayersFinalHand(STRAIGHT_FLUSH, playerNum);
+			return TRUE;
+		}
+		return FALSE;
+	}
+	
+	public void bubbleSort(int[] hand) {
+		int temp;
+		boolean swapped = true;
+		int j = 0;
+		
+		while(swapped) {
+			swapped = false;
+			j++;
+			for(int i=0; i<hand.length-j; i++) {
+				if(hand[i] > hand[i+1]) {
+					temp = hand[i];
+					hand[i] = hand[i+1];
+					hand[i+1] = temp;
+					swapped = true;
+				}
+			}
+		}		
+	}
 	
 }

@@ -41,6 +41,69 @@ public class Poker {
     	//bis.close();
     	//in.close();
     }
+    
+    /*
+     * Test functions
+     */
+    	public static void testPair(int[] hand) {
+    		hand[0] = 0;
+			hand[1] = 13;
+			hand[2] = 28;
+			hand[3] = 29;
+			hand[4] = 30;
+    	}
+    	public static void testTwoPair(int[] hand) {
+    		hand[0] = 0;
+			hand[1] = 13;
+			hand[2] = 1;
+			hand[3] = 14;
+			hand[4] = 29;
+    	}
+    	public static void testThreeOfAKind(int[] hand) {
+    		hand[0] = 0;
+			hand[1] = 13;
+			hand[2] = 26;
+			hand[3] = 27;
+			hand[4] = 28;
+    	}
+    	public static void testFourOfAKind(int[] hand) {
+    		hand[0] = 0;
+			hand[1] = 13;
+			hand[2] = 26;
+			hand[3] = 39;
+			hand[4] = 40;
+    	}
+    	public static void testStraight(int[] hand) {
+    		hand[0] = 14;
+			hand[1] = 2;
+			hand[2] = 3;
+			hand[3] = 4;
+			hand[4] = 5;
+    	}
+    	public static void testFlush(int[] hand) {
+    		hand[0] = 0;
+			hand[1] = 2;
+			hand[2] = 3;
+			hand[3] = 4;
+			hand[4] = 5;
+    	}
+    	public static void testFullHouse(int[] hand) {
+    		hand[0] = 0;
+			hand[1] = 13;
+			hand[2] = 26;
+			hand[3] = 1;
+			hand[4] = 14;
+    	}
+    	public static void testStraightFlush(int[] hand) {
+    		hand[0] = 0;
+			hand[1] = 1;
+			hand[2] = 2;
+			hand[3] = 3;
+			hand[4] = 4;
+    	}
+	/*
+     * END Test functions
+     */
         
         
     /** 
@@ -60,6 +123,7 @@ public class Poker {
     	
     	//TODO: remove this scanner
     	Scanner scan = new Scanner(System.in);
+    	System.out.println("Player " + playerNum);
     	
     	int[] hand;
     	boolean whileFlag = true;
@@ -71,7 +135,28 @@ public class Poker {
     		hand = new int[5];
     		//newDeckState.getHand(hand, playerNum);
     		if(newDeckState.getPlayerUpdate(playerNum) == FALSE) {
-    			newDeckState.dealCards(hand, newDeckState.getUsedCards());
+    			//TODO: undo this following comment
+    			//newDeckState.dealCards(hand, newDeckState.getUsedCards());
+    			
+    			/*
+    			 * TODO: THIS IS THE TESTING PART
+    			 */
+    			switch(playerNum) {
+    			case 0:
+    				testStraight(hand);
+    				break;
+    			case 1:
+    				testFlush(hand);
+    				break;
+    			case 2:
+    				testFullHouse(hand);
+    				break;
+    			case 3:
+    				testStraightFlush(hand);
+    				break;
+    			}
+    			newDeckState.setHand(hand, playerNum);
+    			//add dealt cards to usedCards var
     			newDeckState.setHand(hand, playerNum);
     			//add dealt cards to usedCards var
     			newDeckState.setUsedCards(hand);
@@ -155,9 +240,29 @@ public class Poker {
     		/*
     		 * In the final phase, check to see if there is only 1 player left.
     		 * If so, that player gets all the winnings.
-    		 * If  not, run function to compare hand against each other.
+    		 * If not, run function to compare hand against each other.
     		 * Finally, reset things so that they can go to the deal phase again.
     		 */
+    		
+    		int winningPlayer = 52;
+    		
+    		//Check to see if there is more than 1 player left.  If not, that player gets all the winnings.
+    		if(newDeckState.checkPlayerState()) { //meaning there is more than 1 player left
+    			//run function to compare hands against each other and assign the winner to winning player
+    			//TODO: stuff with winning hand and winning player
+    			newDeckState.calcWinningHand();
+    			winningPlayer = newDeckState.getWinningPlayer();
+			}
+    		else {
+    			winningPlayer = newDeckState.getRemainingPlayer(); //there is only one person in the round
+    		}
+    		
+    		
+    		//distribute winnings to winning player
+    		newDeckState.distributeWinnings(winningPlayer);
+    		
+    		//TODO: fix reset stuff
+    		newDeckState.setPhase(DEAL_PHASE);
     		break;
     	default: break;
     	}
@@ -271,75 +376,6 @@ public class Poker {
     
     static DeckState mDeckState;
     
-//    public class Player {
-//    	int playerId;
-//    	int[] hand = new int[5];
-//    	
-//    	Player(int pid) {
-//    		playerId = pid;
-//    	}
-//    }
-    
-//    public class DeckState {
-//    	int[] deck;
-//    	int[] usedCards;
-//    	int[] playersCards; //the cards of each player in order.  Do mod to find player num
-//    	int numPlayers;
-//    	int phase;
-//    	
-//    	
-//    	
-//    	/** 
-//    	 * Constructor
-//    	 */
-//    	DeckState() {
-//    		deck = new int[52];
-//    		playersCards = new int[20];
-//    		usedCards = new int[52];
-//    		for(int i=0; i<52; i++) {
-//    			deck[i] = i;
-//    		}
-//    	}
-//    	
-//	    public void copy(DeckState oldState, DeckState newState) { //TODO: may need to do a soft copy because of pointers.
-//			oldState.setUsedCards(newState.getUsedCards());
-//			oldState.setPhase(newState.getPhase());
-//			oldState.setPlayersCards(newState.getPlayersCards(), numPlayers);
-//		}
-//    	
-//    	public void setUsedCards(int[] cards) {
-//    		usedCards = cards;
-//    	}
-//    	public int[] getUsedCards() {
-//    		return usedCards;
-//    	}
-//    	
-//    	public void setNumPlayers(int players) {
-//    		numPlayers = players;
-//    	}
-//    	public int getNumPlayers() {
-//    		return numPlayers;
-//    	}
-//    	
-//    	public void setPhase(int p) {
-//    		phase = p;
-//    	}
-//    	public int getPhase() {
-//    		return phase;
-//    	}
-//    	
-//    	public void setPlayersCards(int[] cards, int playerNum) {
-//    		
-//    	}
-//    	public int[] getPlayersCards() {
-//    		return playersCards;
-//    	}
-//    }
-    
-    
-    
-    
-    
    
     public static void printDeckState(DeckState state) {
     	int[] playersCards = state.getPlayersCards();
@@ -389,13 +425,15 @@ public class Poker {
     	}
     	System.out.println();
     	System.out.println("Current Bid: " + state.getCurrentBid());
+    	System.out.println("Winning Player: " + state.getWinningPlayer());
+    	System.out.println("Winning Hand: " + state.getWinningHand());
     	System.out.println();
     }
     
     public static void main(String[] args) {
         //The init function {
     	mDeckState = new DeckState();
-    	mDeckState.setNumPlayers(2);
+    	mDeckState.setNumPlayers(4);
     	mDeckState.setPhase(DEAL_PHASE);
     	mDeckState.initUsedCards();
     	mDeckState.initPlayersCards();
@@ -404,15 +442,86 @@ public class Poker {
     	mDeckState.setPlayerUpdate(1, FALSE);
     	//TODO: init player }
         	
-    	Player p0 = new Player(0);
-    	Player p1 = new Player(1);
+//    	Player p0 = new Player(0);
+//    	Player p1 = new Player(1);
     	
     	Scanner scan = new Scanner(System.in);
-    	System.out.println("initial state:");
-    	printDeckState(mDeckState);
-    	while(mDeckState.getPhase() != FINAL_PHASE) {
-    		//Player 0
+    	//System.out.println("initial state:");
+    	//printDeckState(mDeckState);
     	
+//    	while(true /*mDeckState.getPhase() != FINAL_PHASE*/) {
+//    		//Player 0
+//    	
+//	    	/* everything from here and below is a part of the interp function */
+//	    	//begin serialize and send
+//	    	byte[] bytes0 = new byte[1024];
+//	    	try {
+//	    		bytes0 = serialize(mDeckState);
+//	    	} catch (IOException e) {System.out.println("IOException");}
+//	    	//end serialize and send
+//	    	
+//	    	//pick up where left off in code
+//	    	pokerInterp(bytes0, 0/*playerNumber*/);
+//	    	//System.out.println("Player0: ");
+//	    	printDeckState(mDeckState);
+//	    	System.out.println();
+//    	
+//    	
+//    		//Player 1
+//	    	
+//	    	/* everything from here and below is a part of the interp function */
+//	    	//begin serialize and send
+//	    	byte[] bytes1 = new byte[1024];
+//	    	try {
+//	    		bytes1 = serialize(mDeckState);
+//	    	} catch (IOException e) {System.out.println("IOException");}
+//	    	//end serialize and send
+//	    	
+//	    	//pick up where left off in code
+//	    	pokerInterp(bytes1, 1/*playerNumber*/);
+//	    	//System.out.println("Player1: ");
+//	    	printDeckState(mDeckState);
+//	    	System.out.println();
+//	    	
+//	    	
+//	    	//Player 2
+//	    	
+//	    	/* everything from here and below is a part of the interp function */
+//	    	//begin serialize and send
+//	    	byte[] bytes2 = new byte[1024];
+//	    	try {
+//	    		bytes2 = serialize(mDeckState);
+//	    	} catch (IOException e) {System.out.println("IOException");}
+//	    	//end serialize and send
+//	    	
+//	    	//pick up where left off in code
+//	    	pokerInterp(bytes2, 2/*playerNumber*/);
+//	    	//System.out.println("Player2: ");
+//	    	printDeckState(mDeckState);
+//	    	System.out.println();
+//	    	
+//	    	
+//	    	//Player 3
+//	    	
+//	    	/* everything from here and below is a part of the interp function */
+//	    	//begin serialize and send
+//	    	byte[] bytes3 = new byte[1024];
+//	    	try {
+//	    		bytes3 = serialize(mDeckState);
+//	    	} catch (IOException e) {System.out.println("IOException");}
+//	    	//end serialize and send
+//	    	
+//	    	//pick up where left off in code
+//	    	pokerInterp(bytes3, 3/*playerNumber*/);
+//	    	//System.out.println("Player3: ");
+//	    	printDeckState(mDeckState);
+//	    	System.out.println();
+//    	}
+    	
+    	//check to see if pair/kind/flush system is working.
+    	while(true /*mDeckState.getPhase() != FINAL_PHASE*/) {
+			//Player 0
+		
 	    	/* everything from here and below is a part of the interp function */
 	    	//begin serialize and send
 	    	byte[] bytes0 = new byte[1024];
@@ -423,14 +532,12 @@ public class Poker {
 	    	
 	    	//pick up where left off in code
 	    	pokerInterp(bytes0, 0/*playerNumber*/);
-	    	System.out.println("Player0: ");
+	    	//System.out.println("Player0: ");
 	    	printDeckState(mDeckState);
-	    	//TODO: take next print out
-	    	System.out.println("after player 0");
 	    	System.out.println();
-    	
-    	
-    		//Player 1
+		
+		
+			//Player 1
 	    	
 	    	/* everything from here and below is a part of the interp function */
 	    	//begin serialize and send
@@ -442,13 +549,44 @@ public class Poker {
 	    	
 	    	//pick up where left off in code
 	    	pokerInterp(bytes1, 1/*playerNumber*/);
-	    	System.out.println("Player1: ");
+	    	//System.out.println("Player1: ");
 	    	printDeckState(mDeckState);
-	    	//TODO: take next print out
-	    	System.out.println("after player 1");
 	    	System.out.println();
-	    	//int c = scan.nextInt();
-    	}
+	    	
+	    	
+	    	//Player 2
+	    	
+	    	/* everything from here and below is a part of the interp function */
+	    	//begin serialize and send
+	    	byte[] bytes2 = new byte[1024];
+	    	try {
+	    		bytes2 = serialize(mDeckState);
+	    	} catch (IOException e) {System.out.println("IOException");}
+	    	//end serialize and send
+	    	
+	    	//pick up where left off in code
+	    	pokerInterp(bytes2, 2/*playerNumber*/);
+	    	//System.out.println("Player2: ");
+	    	printDeckState(mDeckState);
+	    	System.out.println();
+	    	
+	    	
+	    	//Player 3
+	    	
+	    	/* everything from here and below is a part of the interp function */
+	    	//begin serialize and send
+	    	byte[] bytes3 = new byte[1024];
+	    	try {
+	    		bytes3 = serialize(mDeckState);
+	    	} catch (IOException e) {System.out.println("IOException");}
+	    	//end serialize and send
+	    	
+	    	//pick up where left off in code
+	    	pokerInterp(bytes3, 3/*playerNumber*/);
+	    	//System.out.println("Player3: ");
+	    	printDeckState(mDeckState);
+	    	System.out.println();
+		}
     	
     	
     	
